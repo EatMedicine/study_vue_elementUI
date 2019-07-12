@@ -6,12 +6,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="index.css">
     <title>Index</title>
 </head>
 
 <body>
     <div id="app">
-        <el-button type="primary">2333</el-button>
+        <el-container>
+            <el-header height="100px">
+                <el-row type="flex" justify="center">
+                    <el-col :span="10">
+                        <p style="font-size: 50px;text-align: center">MyTable</p>
+                    </el-col>
+                </el-row>
+            </el-header>
+
+            <el-main>
+                <div>
+                    <el-row type="flex" justify="center">
+                        <el-col :span="13">
+                            <el-table :data="showData" stripe>
+                                <el-table-column label="ID" width="200">
+                                    <template v-slot="{row}">
+                                        <el-input v-if="row.isEdit" v-model="row.id" size="small"></el-input>
+                                        <span v-else>{{row.id}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="姓名" width="300">
+                                    <template v-slot="{row}">
+                                        <el-input v-if="row.isEdit" v-model="row.name" size="small"></el-input>
+                                        <div v-else>
+                                            <i class="el-icon-user"></i>
+                                            <span>{{row.name}}</span>
+                                        </div>
+
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="年龄" width="100">
+                                    <template v-slot="{row}">
+                                        <el-input v-if="row.isEdit" v-model="row.age" size="small"></el-input>
+                                        <span v-else>{{row.age}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column align="right">
+                                    <template slot="header">
+                                        <el-button circle type="primary" size="small" icon="el-icon-document-add"
+                                            @click="isDialogOpen=!isDialogOpen"></el-button>
+                                    </template>
+                                    <template v-slot="data">
+                                        <div v-if="data.row.isEdit">
+                                            <el-button plain icon="el-icon-finish" size="small"
+                                                @click="data.row.isEdit=false">Save</el-button>
+                                        </div>
+                                        <div v-else>
+                                            <el-button plain icon="el-icon-edit-outline" size="small"
+                                                @click="data.row.isEdit=true">Edit</el-button>
+                                            <el-button plain type="danger" icon="el-icon-delete" size="small" @
+                                                @click="deleteData(data.$index)">Delete</el-button>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-col>
+                    </el-row>
+                    <el-row type="flex" justify="center">
+                        <el-pagination :total="dataLength" :current-page.sync="index" :page-size="5"
+                            layout="prev, pager, next"></el-pagination>
+                    </el-row>
+                    <el-dialog title="添加数据" :visible.sync="isDialogOpen">
+                        <el-form :model="formData" :inline="true">
+                            <el-form-item label="ID">
+                                <el-input-number v-model="formData.id"></el-input-number>
+                            </el-form-item>
+                            <el-form-item label="name">
+                                    <el-input v-model="formData.name" placeholder="请输入姓名"></el-input>
+                            </el-form-item>
+                            <el-form-item label="age">
+                                <el-input-number v-model="formData.age"></el-input-number>
+                            </el-form-item>
+                        </el-form>
+                        <div slot="footer" class="dialog-footer">
+                            <el-button @click="isDialogOpen = false">取 消</el-button>
+                            <el-button type="primary" @click="isDialogOpen = false;addData();">确 定</el-button>
+                        </div>
+                    </el-dialog>
+                </div>
+
+            </el-main>
+
+        </el-container>
     </div>
     <!-- import Vue before Element -->
     <script src="https://unpkg.com/vue/dist/vue.js"></script>
