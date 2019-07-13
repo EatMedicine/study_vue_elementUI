@@ -51,7 +51,7 @@ Vue.component('my-table', {
     template: `
     <div>
         <el-row type="flex" justify="center">
-            <el-col :span="13">
+            <el-col :span="24">
                 <el-row type="flex" justify="end">
                     <el-col :span="4">
                         <el-input v-model="search" size="small"
@@ -60,13 +60,13 @@ Vue.component('my-table', {
                     </el-col>
                 </el-row>
                 <el-table :data="showData" stripe :default-sort='{prop:"id",order:"ascending"}'>
-                    <el-table-column label="ID" width="200" prop="id">
+                    <el-table-column label="ID"  prop="id">
                         <template v-slot="{row}">
                             <el-input v-if="row.isEdit" v-model="row.id" size="small"></el-input>
                             <span v-else>{{row.id}}</span>
                         </template>
                     </el-table-column>
-                    <el-table-column label="姓名" width="300" prop="name">
+                    <el-table-column label="姓名" prop="name">
                         <template v-slot="{row}">
                             <el-input v-if="row.isEdit" v-model="row.name" size="small"></el-input>
                             <div v-else>
@@ -75,7 +75,7 @@ Vue.component('my-table', {
                             </div>
                         </template>
                     </el-table-column>
-                    <el-table-column label="年龄" width="100" prop="age">
+                    <el-table-column label="年龄" prop="age">
                         <template v-slot="{row}">
                             <el-input v-if="row.isEdit" v-model="row.age" size="small"></el-input>
                             <span v-else>{{row.age}}</span>
@@ -127,6 +127,203 @@ Vue.component('my-table', {
     `
 })
 
+Vue.component('my-table-all', {
+    data:function(){
+        return{
+            index: 0,
+            isDialogOpen: false,
+            formData: {
+
+            },
+            search: "",
+            edits:null
+        }
+    },
+    props: {
+        data:null,
+        tableSize:{
+            type: Number,
+            default: 5
+        },
+        searchKey:{
+            type: String,
+            default: ""
+        }
+    },
+    created(){
+        let data = this.tableHead;
+        for(let item of data){
+            if(item.type == "number"){
+                this.formData[item.label] = 0;
+            }
+            else{
+                this.formData[item.label] = "";
+            }
+        }
+    },
+    methods:{
+        getData: function (index, num) {
+            return this.data.slice(index, index + num);
+        },
+        deleteData: function (index) {
+            var arrayIndex = (this.index - 1) * this.tableSize + index;
+            this.data.splice(arrayIndex, 1);
+        },
+        addData: function () {
+            this.data.push(Object.assign({},this.formData));
+            this.initFormData();
+        },
+        getColsEditStatus: function(index){
+            if(index>=this.tableSize||index<0){
+                return false;
+            }
+            if(null == this.edits){
+                this.edits = [];
+                for(var count=0;count<this.tableSize;count++){
+                    this.edits.push(false);
+                }
+                return false;
+            }
+            return this.edits[index];
+        },
+        setColsEditStatus: function(index,status){
+            if(index>=this.tableSize||index<0){
+                return;
+            }
+            if(null == this.edits){
+                this.edits = [];
+                for(var count=0;count<this.tableSize;count++){
+                    this.edits.push(false);
+                }
+            }
+            this.$set(this.edits,index,status);
+        },
+        initFormData: function(){
+            let data = this.tableHead;
+            for(let item of data){
+                if(item.type == "number"){
+                    this.formData[item.label] = 0;
+                }
+                else{
+                    this.formData[item.label] = "";
+                }
+            }
+        },
+        setFormData: function(key,event){
+            console.log(key+"|"+event)
+            this.$set(this.formData,key,event);
+        }
+    },
+    computed: {
+        showData: function () {
+            if(this.searchKey==""){
+                return this.data.slice((this.index - 1) * this.tableSize, (this.index - 1) * this.tableSize + this.tableSize);
+            }else{
+                return this.data.filter(tmp=>
+                    !this.search||tmp[this.searchKey].indexOf(this.search)!=-1
+                ).slice((this.index - 1) * this.tableSize, (this.index - 1) * this.tableSize + this.tableSize);
+            }
+        },
+        dataLength: function () {
+            if(this.searchKey==""){
+                return this.data.length;
+            }
+            else{
+                return this.data.filter(tmp=>
+                    !this.search||tmp[this.searchKey].indexOf(this.search)!=-1
+                ).length;
+            }
+        },
+        tableHead: function(){
+            let keys = Object.keys(this.data[0]);
+            let values = Object.values(this.data[0]);
+            let result = [];
+            for(let count=0;count<keys.length;count++){
+                result.push({
+                    label:keys[count],
+                    type:typeof(values[count])
+                });
+            }
+            return result;
+        },
+        isEditCols: {
+            get(index){
+                if(index>=this.tableSize||index<0){
+                    return false;
+                }
+                return this.edits[index];
+            },
+            set(index,val){
+                if(index>=this.tableSize||index<0){
+                    return false;
+                }
+                this.edits[index] = val;
+            }
+        }
+        
+    },
+    template: `
+    <div>
+        <el-row type="flex" justify="center">
+            <el-col :span="24">
+                <el-row type="flex" justify="end">
+                    <el-col :span="4">
+                        <el-input v-model="search" size="small"
+                            placeholder="输入关键字搜索"
+                        ></el-input>
+                    </el-col>
+                </el-row>
+                <el-table :data="showData" stripe >
+                    <el-table-column v-for="item in tableHead" :label="item.label" :property="item.label" :key="item.label">
+                        <template v-slot="scope">
+                            <el-input v-if="getColsEditStatus(scope.$index)" v-model="scope.row[scope.column.property]" size="small"></el-input>
+                            <span v-else>{{scope.row[scope.column.property]}}</span>
+                        </template> 
+                    </el-table-column>
+                    
+                    <el-table-column align="right">
+                        <template slot="header">
+
+                            <el-button circle type="primary" size="small" icon="el-icon-document-add"
+                                @click="isDialogOpen=!isDialogOpen"></el-button>
+                        </template>
+                        <template v-slot="data">
+                            <div v-if="getColsEditStatus(data.$index)">
+                                <el-button plain icon="el-icon-finish" size="small"
+                                    @click="setColsEditStatus(data.$index,false)">Save</el-button>
+                            </div>
+                            <div v-else>
+                                <el-button plain icon="el-icon-edit-outline" size="small"
+                                    @click="setColsEditStatus(data.$index,true)">Edit</el-button>
+                                <el-button plain type="danger" icon="el-icon-delete" size="small" @
+                                    @click="deleteData(data.$index)">Delete</el-button>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                </el-table>
+            </el-col>
+        </el-row>
+        <el-row type="flex" justify="center">
+            <el-pagination :total="dataLength" :current-page.sync="index" :page-size="5"
+                layout="prev, pager, next"></el-pagination>
+        </el-row>
+        <el-dialog title="添加数据" :visible.sync="isDialogOpen">
+            <el-form :model="formData" :inline="true">
+                <el-form-item v-for="item in tableHead" :label="item.label" :key="item.label">
+                    <el-input v-if="item.type=='string'" @input="$forceUpdate()" v-model="formData[item.label]"></el-input>
+                    <el-input-number v-else @input="$forceUpdate()" v-model="formData[item.label]"></el-input-number>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="isDialogOpen = false">取 消</el-button>
+                <el-button type="primary" @click="isDialogOpen = false;addData();">确 定</el-button>
+            </div>
+        </el-dialog>
+    </div>
+    `
+})
+
 
 new Vue({
     el: '#app',
@@ -152,6 +349,29 @@ new Vue({
             { id: 18, name: "test18", age: 18, isEdit: false },
             { id: 19, name: "test19", age: 10, isEdit: false },
             { id: 20, name: "test20", age: 12, isEdit: false },
+
+        ],
+        userData2: [
+            { id: 1, name: "test1", age: 18},
+            { id: 2, name: "test2", age: 10},
+            { id: 3, name: "test3", age: 12},
+            { id: 4, name: "test4", age: 18},
+            { id: 5, name: "test5", age: 14},
+            { id: 6, name: "test6", age: 18},
+            { id: 7, name: "test7", age: 12},
+            { id: 8, name: "test8", age: 18},
+            { id: 9, name: "test9", age: 15},
+            { id: 10, name: "test10", age: 19},
+            { id: 11, name: "test11", age: 18},
+            { id: 12, name: "test12", age: 16},
+            { id: 13, name: "test13", age: 18},
+            { id: 14, name: "test14", age: 15},
+            { id: 15, name: "test15", age: 18},
+            { id: 16, name: "test16", age: 17},
+            { id: 17, name: "test17", age: 11},
+            { id: 18, name: "test18", age: 18},
+            { id: 19, name: "test19", age: 10},
+            { id: 20, name: "test20", age: 12},
 
         ],
         index: 0,
