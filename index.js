@@ -147,7 +147,7 @@ Vue.component('my-table-all', {
         },
         searchKey:{
             type: String,
-            default: ""
+            default: null
         }
     },
     created(){
@@ -216,9 +216,11 @@ Vue.component('my-table-all', {
     },
     computed: {
         showData: function () {
-            if(this.searchKey==""){
+            if(this.search==""){
+                console.log("1");
                 return this.data.slice((this.index - 1) * this.tableSize, (this.index - 1) * this.tableSize + this.tableSize);
             }else{
+                console.log("2");
                 return this.data.filter(tmp=>
                     !this.search||tmp[this.searchKey].indexOf(this.search)!=-1
                 ).slice((this.index - 1) * this.tableSize, (this.index - 1) * this.tableSize + this.tableSize);
@@ -266,7 +268,7 @@ Vue.component('my-table-all', {
     <div>
         <el-row type="flex" justify="center">
             <el-col :span="24">
-                <el-row type="flex" justify="end">
+                <el-row type="flex" justify="end" v-if="searchKey">
                     <el-col :span="4">
                         <el-input v-model="search" size="small"
                             placeholder="输入关键字搜索"
@@ -305,7 +307,7 @@ Vue.component('my-table-all', {
             </el-col>
         </el-row>
         <el-row type="flex" justify="center">
-            <el-pagination :total="dataLength" :current-page.sync="index" :page-size="5"
+            <el-pagination :total="dataLength" :current-page.sync="index" :page-size="tableSize"
                 layout="prev, pager, next"></el-pagination>
         </el-row>
         <el-dialog title="添加数据" :visible.sync="isDialogOpen">
